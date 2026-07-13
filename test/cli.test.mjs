@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { chmodSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { chmodSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
@@ -7,6 +7,9 @@ import test from "node:test";
 import { storedZip } from "./helpers.mjs";
 
 const cli = resolve(new URL("../shipup.mjs", import.meta.url).pathname);
+const packageVersion = JSON.parse(
+  readFileSync(new URL("../package.json", import.meta.url), "utf8"),
+).version;
 
 function run(args, env = {}) {
   return spawnSync(process.execPath, [cli, ...args], {
@@ -52,7 +55,7 @@ test("help and version are available without credentials", () => {
 
   const version = run(["--version"]);
   assert.equal(version.status, 0);
-  assert.equal(version.stdout.trim(), "0.2.0");
+  assert.equal(version.stdout.trim(), packageVersion);
 });
 
 test("invalid usage and missing credentials use stable exit codes", () => {
