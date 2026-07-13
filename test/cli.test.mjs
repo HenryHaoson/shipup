@@ -19,6 +19,13 @@ function tempProject() {
   const dir = mkdtempSync(join(tmpdir(), "shipup-cli-"));
   const creds = join(dir, "credentials.yaml");
   writeFileSync(creds, [
+    "android:",
+    "  package_name: com.example.app",
+    "  channels:",
+    "    huawei:",
+    "      app_id: '400'",
+    "      client_id: client",
+    "      client_secret: secret",
     "harmony:",
     "  app_id: '100'",
     "  package_name: com.example.app",
@@ -45,7 +52,7 @@ test("help and version are available without credentials", () => {
 
   const version = run(["--version"]);
   assert.equal(version.status, 0);
-  assert.equal(version.stdout.trim(), "0.1.0");
+  assert.equal(version.stdout.trim(), "0.2.0");
 });
 
 test("invalid usage and missing credentials use stable exit codes", () => {
@@ -124,6 +131,64 @@ test("iOS dry-run does not invoke Xcode upload tools", () => {
     ], { PATH: "" });
     assert.equal(result.status, 0);
     assert.equal(JSON.parse(result.stdout).results[0].status, "skipped");
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("Android multi-market dry-run uses default credentials and standard JSON", () => {
+  const { dir, creds } = tempProject();
+  try {
+    const apk = join(dir, "sample.apk");
+    writeFileSync(apk, storedZip("AndroidManifest.xml", "fixture"));
+    const result = run([
+      "android", "upload", "--upload", `huawei=${apk}`,
+      "--version-name", "1.2.3", "--version-code", "123",
+      "--dry-run", "--output", "json",
+    ], { SHIPUP_CREDS: creds });
+    assert.equal(result.status, 0, result.stderr);
+    const json = JSON.parse(result.stdout);
+    assert.equal(json.tool, "shipup");
+    assert.equal(json.platform, "android");
+    assert.equal(json.results[0].channel, "huawei");
+    assert.equal(json.results[0].status, "skipped");
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("iOS legacy --version and --build aliases remain compatible", () => {
+  const { dir, creds } = tempProject();
+  try {
+    const result = run([
+      "ios", "submit", "--creds", creds,
+      "--version", "1.2.3", "--build", "123",
+      "--dry-run", "--output", "json",
+    ]);
+    assert.equal(result.status, 0, result.stderr);
+    const json = JSON.parse(result.stdout);
+    assert.equal(json.results[0].versionName, "1.2.3");
+    assert.equal(json.results[0].versionCode, "123");
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("multi-market CLI rejects invalid timeout, output, and concurrency values", () => {
+  const { dir, creds } = tempProject();
+  try {
+    assert.equal(run([
+      "android", "status", "--channel", "huawei", "--creds", creds,
+      "--timeout", "0", "--dry-run",
+    ]).status, 3);
+    assert.equal(run([
+      "android", "status", "--channel", "huawei", "--creds", creds,
+      "--output", "xml", "--dry-run",
+    ]).status, 3);
+    assert.equal(run([
+      "android", "upload", "--upload", "huawei=missing.apk", "--creds", creds,
+      "--concurrency", "0", "--dry-run",
+    ]).status, 3);
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }

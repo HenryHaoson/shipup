@@ -1,13 +1,14 @@
 {
   "name": "shipup",
-  "version": "0.1.0",
-  "description": "Zero-dependency release CLI for App Store Connect and AppGallery Connect",
+  "version": "0.2.0",
+  "description": "Cross-platform release CLI for App Store Connect, AppGallery Connect, and Android app markets",
   "type": "module",
   "bin": {
     "shipup": "./shipup.mjs"
   },
   "files": [
     "shipup.mjs",
+    "dist/",
     "lib/",
     "docs/",
     "creds.example.yaml",
@@ -18,11 +19,15 @@
     "SECURITY.md"
   ],
   "scripts": {
-    "check": "node --check shipup.mjs && node --check lib/common.mjs && node --check lib/harmony.mjs && node --check lib/huawei.mjs && node --check lib/ios.mjs && node --check scripts/security-scan.mjs",
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "check": "npm run typecheck && node --check shipup.mjs && node --check lib/common.mjs && node --check lib/harmony.mjs && node --check lib/huawei.mjs && node --check lib/ios.mjs && node --check scripts/security-scan.mjs",
     "security": "node scripts/security-scan.mjs",
-    "test": "node --test test/*.test.mjs",
-    "test:coverage": "node --test --experimental-test-coverage test/*.test.mjs",
-    "pack:check": "npm pack --dry-run"
+    "test": "npm run build && node --test test/*.test.mjs",
+    "test:coverage": "npm run build && node --test --experimental-test-coverage test/*.test.mjs",
+    "pack:check": "npm pack --dry-run",
+    "prepack": "npm run build",
+    "prepare": "npm run build"
   },
   "engines": {
     "node": ">=18.17"
@@ -31,6 +36,8 @@
     "app-store-connect",
     "appgallery-connect",
     "harmonyos",
+    "android",
+    "app-market",
     "ios",
     "release",
     "cli"
@@ -46,5 +53,18 @@
   "license": "0BSD",
   "publishConfig": {
     "access": "public"
+  },
+  "dependencies": {
+    "adm-zip": "^0.5.16",
+    "app-info-parser": "^1.0.1",
+    "commander": "^12.1.0",
+    "jimp": "^1.6.1",
+    "p-limit": "^6.1.0",
+    "yaml": "^2.5.1"
+  },
+  "devDependencies": {
+    "@types/adm-zip": "^0.5.5",
+    "@types/node": "^22.7.0",
+    "typescript": "^5.6.2"
   }
 }

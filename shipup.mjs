@@ -2,12 +2,13 @@
 // shipup — mobile application release CLI
 //
 //   shipup harmony upload|submit|status   AppGallery（HarmonyOS .app，Publishing API v3）
-//   shipup huawei  upload|status          华为应用市场（安卓 APK，Publish API v2）
+//   shipup huawei  upload|status          华为应用市场兼容命令（安卓 APK，Publish API v2）
+//   shipup android upload|status          Android 八渠道发布
 //   shipup ios     upload|submit|status|release   App Store（altool + ASC API）
 //
 // 设计不变量：无业务逻辑，appId/密钥全由凭证文件注入；JSON→stdout、
 // 诊断→stderr；GET 才自动重试；统一退出码 0/2/3/4/5/124；--dry-run 不发请求。
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import { CliError, ExitCode, log, loadPlatformCreds } from "./lib/common.mjs";
@@ -21,10 +22,10 @@ const PLATFORMS = {
   ios: { module: ios, commands: ["upload", "submit", "status", "release"], channel: "appstore" },
 };
 
-const VERSION = "0.1.0";
+const VERSION = JSON.parse(readFileSync(new URL("./package.json", import.meta.url), "utf8")).version;
 const DEFAULT_CREDS = join(homedir(), ".config", "shipup", "credentials.yaml");
 
-const USAGE = `shipup — 三端发布 CLI（AppGallery HarmonyOS / 华为应用市场 / App Store）
+const USAGE = `shipup — 跨平台应用商店发布 CLI
 
 用法:
   shipup harmony upload --package <path.app> [--creds <file>] [--release-note <t|@f>] [--lang] [--no-wait]
@@ -34,10 +35,15 @@ const USAGE = `shipup — 三端发布 CLI（AppGallery HarmonyOS / 华为应用
   shipup huawei  upload --package <path.apk> [--creds <file>] [--release-note <t|@f>] [--submit-review]
   shipup huawei  status [--creds <file>]
 
+  shipup android upload --upload <渠道=path.apk...> [--creds <file>] [--submit-review] [--dry-run]
+  shipup android status --channel <渠道> [--creds <file>]
+    渠道: huawei | honor | oppo | vivo | xiaomi | samsung | qq | meizu
+
   shipup ios     upload --package <path.ipa> [--creds <file>] [--submit-review] [--whats-new <t|@f>] [--metadata <yaml>] [--release-type MANUAL|AFTER_APPROVAL]
-  shipup ios     submit --version <1.0.0> --build <1> [--creds <file>] [--whats-new] [--metadata] [--release-type]
-  shipup ios     status --version <1.0.0> [--creds <file>]
-  shipup ios     release --version <1.0.0> [--creds <file>] [--phased | --complete | --pause | --resume]
+  shipup ios     submit --app-version <1.0.0> --build-version <1> [--creds <file>] [--bundle-id <id>] [--whats-new] [--metadata] [--release-type]
+  shipup ios     status --app-version <1.0.0> [--creds <file>] [--bundle-id <id>]
+  shipup ios     release --app-version <1.0.0> [--creds <file>] [--bundle-id <id>] [--phased | --complete | --pause | --resume]
+  （兼容旧参数 --version / --build）
 
 通用选项:
   --creds <file>     凭证 YAML；默认读取 SHIPUP_CREDS 或 ~/.config/shipup/credentials.yaml
@@ -140,11 +146,15 @@ async function main() {
   }
 }
 
-main().catch((e) => {
-  if (e instanceof CliError) {
-    console.error(e.message);
-    process.exit(e.exitCode);
-  }
-  console.error(e.stack || String(e));
-  process.exit(ExitCode.FAIL);
-});
+if (["android", "ios"].includes(process.argv[2])) {
+  await import("./dist/cli/index.js");
+} else {
+  main().catch((e) => {
+    if (e instanceof CliError) {
+      console.error(e.message);
+      process.exit(e.exitCode);
+    }
+    console.error(e.stack || String(e));
+    process.exit(ExitCode.FAIL);
+  });
+}
