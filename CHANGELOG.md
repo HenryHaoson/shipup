@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.2.2 - 2026-07-13
+
+- Fix vivo signature verification for multiline release notes and descriptions by
+  matching the CRLF normalization performed during multipart serialization.
+
 ## 0.2.1 - 2026-07-13
 
 - Publish `shipup` to npm and document global installation.

@@ -40,10 +40,24 @@ function compareAsciiUpperCase(a: string, b: string): number {
  */
 export function signVivo(params: Record<string, string>, accessSecret: string): string {
   const str = Object.keys(params)
+    .filter((k) => k !== 'sign')
     .sort(compareAsciiUpperCase)
     .map((k) => `${k}=${params[k]}`)
     .join('&');
   return hmacSha256Hex(accessSecret, str);
+}
+
+/**
+ * WHATWG FormData 会在 multipart 序列化时把文本字段中的 CR/LF 统一为 CRLF。
+ * vivo 服务端按实际收到的字段值重算签名，因此必须在签名前做相同规范化；
+ * 否则多行 updateDesc/detailDesc 会因签名原文与线上字节不一致而返回 10001。
+ */
+function normalizeMultipartParams(params: Record<string, string>): Record<string, string> {
+  return Object.fromEntries(
+    Object.entries(params)
+      .filter(([k]) => k !== 'sign')
+      .map(([k, v]) => [k, v.replace(/\r\n|\r|\n/g, '\r\n')]),
+  );
 }
 
 /** 网关公共参数（timestamp 为毫秒，与 QQ 的秒不同）。 */
@@ -66,9 +80,10 @@ async function postMultipart(
   timeoutMs: number,
   file?: { field: string; bytes: Uint8Array; filename: string },
 ): Promise<any> {
-  params.sign = signVivo(params, accessSecret);
+  const signedParams = normalizeMultipartParams(params);
+  signedParams.sign = signVivo(signedParams, accessSecret);
   const form = new FormData();
-  for (const [k, v] of Object.entries(params)) form.append(k, v);
+  for (const [k, v] of Object.entries(signedParams)) form.append(k, v);
   if (file) {
     form.append(file.field, new Blob([file.bytes]), file.filename);
   }
