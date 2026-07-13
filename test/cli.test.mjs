@@ -56,6 +56,11 @@ test("help and version are available without credentials", () => {
   const version = run(["--version"]);
   assert.equal(version.status, 0);
   assert.equal(version.stdout.trim(), packageVersion);
+
+  const androidHelp = run(["android", "upload", "--help"]);
+  assert.equal(androidHelp.status, 0);
+  assert.match(androidHelp.stdout, /--huawei-release-mode/);
+  assert.match(androidHelp.stdout, /--huawei-phased-percent/);
 });
 
 test("invalid usage and missing credentials use stable exit codes", () => {
@@ -191,6 +196,14 @@ test("multi-market CLI rejects invalid timeout, output, and concurrency values",
     assert.equal(run([
       "android", "upload", "--upload", "huawei=missing.apk", "--creds", creds,
       "--concurrency", "0", "--dry-run",
+    ]).status, 3);
+    assert.equal(run([
+      "android", "upload", "--upload", "huawei=missing.apk", "--creds", creds,
+      "--huawei-release-mode", "rolling", "--dry-run",
+    ]).status, 3);
+    assert.equal(run([
+      "android", "upload", "--upload", "huawei=missing.apk", "--creds", creds,
+      "--huawei-phased-percent", "101", "--dry-run",
     ]).status, 3);
   } finally {
     rmSync(dir, { recursive: true, force: true });

@@ -34,6 +34,25 @@ export interface ChannelResult {
 /** 已解析为明文的某渠道凭证（字段随渠道而异） */
 export type ChannelCreds = Record<string, string | undefined>;
 
+/** 华为 Android 发布通道。auto 会在存在上架中的分阶段版本时继续走分阶段升级。 */
+export type HuaweiReleaseMode = 'auto' | 'full' | 'phased';
+
+export interface HuaweiReleaseOptions {
+  mode?: HuaweiReleaseMode;
+  /** 显式创建分阶段版本时可覆盖当前分阶段配置；auto 默认继承在架版本。 */
+  phased?: {
+    startTime?: string;
+    endTime?: string;
+    percent?: string;
+    description?: string;
+  };
+}
+
+/** 渠道特有的发布参数集中放置，避免继续向 UploadContext 增加扁平字段。 */
+export interface ChannelReleaseOptions {
+  huawei?: HuaweiReleaseOptions;
+}
+
 export interface UploadContext {
   /** 本地包路径（android: apk；ios: ipa） */
   pkg: string;
@@ -64,6 +83,8 @@ export interface UploadContext {
   releaseType?: string;
   /** iOS：开启 7 天灰度 */
   phased?: boolean;
+  /** Android 各渠道的发布通道策略。 */
+  releaseOptions?: ChannelReleaseOptions;
   creds: ChannelCreds;
   timeoutMs: number;
 }
@@ -91,7 +112,7 @@ export function redactSensitive(value: unknown): string {
     .replace(/-----BEGIN [^-]+-----[\s\S]*?-----END [^-]+-----/g, '<redacted-private-key>')
     .replace(/(authorization\s*[:=]\s*)(?:bearer\s+)?[^\s,}\]]+/gi, '$1<redacted>')
     .replace(
-      /(["']?(?:access_?token|refresh_?token|client_?secret|access_?secret|private_?key|password|authCode|token)["']?\s*[:=]\s*["']?)([^"'\s,&}\]]+)/gi,
+      /(["']?(?:access_?token|refresh_?token|client_?secret|access_?secret|private_?key|password|authCode|token|registered_?id_?number)["']?\s*[:=]\s*["']?)([^"'\s,&}\]]+)/gi,
       '$1<redacted>',
     )
     .replace(/([?&](?:access_?token|client_?secret|access_?secret|password|authCode|signature|sign)=)[^&\s]+/gi, '$1<redacted>')

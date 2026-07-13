@@ -51,6 +51,7 @@ shipup harmony upload --package ./application.app --dry-run
 shipup android upload \
   --upload huawei=./app-huawei.apk honor=./app-honor.apk \
   --release-note @./release-note.txt \
+  --huawei-release-mode auto \
   --submit-review --output json
 shipup android status --channel huawei
 
@@ -73,6 +74,12 @@ shipup ios     upload|submit|status|release
 Android 上传支持按渠道更新发布说明、图标、截图、应用名、一句话简介和长描述。
 各市场具体支持情况见 [平台行为](docs/providers.md) 和
 [Android 市场能力表](docs/android-markets.md)。
+
+华为上传默认使用 `--huawei-release-mode auto`。检测到正在发布、已暂停或可继续的
+草稿分阶段版本时，`shipup` 会让软件包上传、素材更新和提审统一使用
+`releaseType=3`。可用 `full` 强制全网发布；首次显式使用 `phased` 时需提供
+`--huawei-phased-start`、`--huawei-phased-end`、`--huawei-phased-percent`，
+分阶段说明可用 `--huawei-phased-description`，缺省回退到更新说明。
 
 iOS 新参数统一为 `--app-version` 和 `--build-version`；旧的 `--version`、`--build`
 仍可使用。`--bundle-id` 可以自动反查 App Store Connect 数字 App ID。

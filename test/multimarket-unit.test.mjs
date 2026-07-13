@@ -71,9 +71,9 @@ test("HMAC-SHA256 与 Node crypto 一致", () => {
 
 test("多市场错误日志会脱敏凭证和签名参数", () => {
   const text = redactSensitive(
-    'Authorization: Bearer abc client_secret="secret-value" password=pwd123&access_token=token-value',
+    'Authorization: Bearer abc client_secret="secret-value" password=pwd123&access_token=token-value registeredIdNumber=91330000123456789X',
   );
-  assert.doesNotMatch(text, /abc|secret-value|pwd123|token-value/);
+  assert.doesNotMatch(text, /abc|secret-value|pwd123|token-value|91330000123456789X/);
   assert.match(text, /<redacted>/);
   const error = new UploadError(401, 'private_key="very-secret-private-key"');
   assert.doesNotMatch(error.message, /very-secret-private-key/);

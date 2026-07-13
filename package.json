@@ -1,6 +1,6 @@
 {
   "name": "shipup",
-  "version": "0.2.2",
+  "version": "0.3.0",
   "description": "Cross-platform release CLI for App Store Connect, AppGallery Connect, and Android app markets",
   "type": "module",
   "bin": {
