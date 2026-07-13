@@ -1,0 +1,42 @@
+name: publish
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: npm-publish-${{ github.event.release.tag_name }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.release.tag_name }}
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          registry-url: https://registry.npmjs.org
+          cache: npm
+      - name: Use an OIDC-capable npm CLI
+        run: npm install --global npm@11.18.0
+      - run: npm ci --ignore-scripts
+      - run: npm run check
+      - run: npm run security
+      - run: npm test
+      - run: npm run pack:check
+      - run: npm audit
+      - name: Verify release tag
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: node scripts/verify-release-tag.mjs
+      - name: Publish to npm with trusted publishing
+        run: npm publish --access public

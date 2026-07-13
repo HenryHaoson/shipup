@@ -21,7 +21,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "check": "npm run typecheck && node --check shipup.mjs && node --check lib/common.mjs && node --check lib/harmony.mjs && node --check lib/huawei.mjs && node --check lib/ios.mjs && node --check scripts/security-scan.mjs",
+    "check": "npm run typecheck && node --check shipup.mjs && node --check lib/common.mjs && node --check lib/harmony.mjs && node --check lib/huawei.mjs && node --check lib/ios.mjs && node --check scripts/security-scan.mjs && node --check scripts/verify-release-tag.mjs",
     "security": "node scripts/security-scan.mjs",
     "test": "npm run build && node --test test/*.test.mjs",
     "test:coverage": "npm run build && node --test --experimental-test-coverage test/*.test.mjs",
