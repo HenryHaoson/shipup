@@ -1,5 +1,7 @@
 # shipup
 
+[![CI](https://github.com/HenryHaoson/shipup/actions/workflows/ci.yml/badge.svg)](https://github.com/HenryHaoson/shipup/actions/workflows/ci.yml)
+
 `shipup` is a zero-dependency Node.js CLI for uploading, submitting, inspecting,
 and releasing mobile applications through:
 

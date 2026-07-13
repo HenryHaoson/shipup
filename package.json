@@ -35,6 +35,14 @@
     "release",
     "cli"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/HenryHaoson/shipup.git"
+  },
+  "bugs": {
+    "url": "https://github.com/HenryHaoson/shipup/issues"
+  },
+  "homepage": "https://github.com/HenryHaoson/shipup#readme",
   "license": "0BSD",
   "publishConfig": {
     "access": "public"

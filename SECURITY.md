@@ -24,8 +24,8 @@ notice.
 ## Reporting a vulnerability
 
 Do not open a public issue containing credentials or private provider output.
-Use the private security-reporting channel configured on the repository host.
-Until one is configured, contact a maintainer privately.
+Use GitHub's private vulnerability reporting form in the repository Security
+tab. Do not include secrets in a public issue.
 
 ## Supported versions
 
