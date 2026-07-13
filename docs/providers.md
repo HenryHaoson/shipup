@@ -37,6 +37,12 @@ APK. Images are resized and compressed to provider limits. Screenshots and text
 metadata are updated only when their corresponding options are present.
 Detailed constraints are listed in [Android market capabilities](android-markets.md).
 
+Huawei supports `--huawei-release-mode auto|full|phased`. Automatic mode probes
+both full and phased release contexts, carries the selected `releaseType`
+through every write request, and refreshes stale inherited draft schedules
+before submission. Explicit phased releases can override their UTC schedule,
+percentage, and description with the corresponding `--huawei-phased-*` options.
+
 ## Huawei compatibility command
 
 `huawei upload|status` preserves the original service-account-oriented Huawei

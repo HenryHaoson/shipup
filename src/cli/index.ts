@@ -5,7 +5,12 @@ import { join, resolve } from 'node:path';
 import { Command } from 'commander';
 import { parse as parseYaml } from 'yaml';
 import { ExitCode, UsageError, CredsError, InputError } from '../core/exit.js';
-import type { UploadContext, ChannelResult } from '../core/types.js';
+import type {
+  UploadContext,
+  ChannelResult,
+  ChannelReleaseOptions,
+  HuaweiReleaseMode,
+} from '../core/types.js';
 import { loadCreds, getChannelCreds } from '../creds/load.js';
 import { validateChannelCreds, validateIosCreds } from '../creds/schema.js';
 import { parsePackage, detectCompat32 } from '../pkginfo/index.js';
@@ -49,6 +54,46 @@ function parseUploads(items: string[] | undefined): Array<{ channel: string; pat
   });
 }
 
+function parseHuaweiReleaseOptions(opts: any): ChannelReleaseOptions {
+  const rawMode = String(opts.huaweiReleaseMode ?? 'auto').toLowerCase();
+  if (!['auto', 'full', 'phased'].includes(rawMode)) {
+    throw new UsageError(
+      `--huawei-release-mode 仅支持 auto | full | phased（收到 "${opts.huaweiReleaseMode}"）`,
+    );
+  }
+
+  let percent: string | undefined;
+  if (opts.huaweiPhasedPercent !== undefined) {
+    const parsed = Number(opts.huaweiPhasedPercent);
+    if (!Number.isFinite(parsed) || parsed < 0 || parsed > 100) {
+      throw new UsageError('--huawei-phased-percent 必须在 0 到 100 之间');
+    }
+    percent = parsed.toFixed(2);
+  }
+
+  const description = readText(opts.huaweiPhasedDescription);
+  if (description && description.length > 500) {
+    throw new UsageError('--huawei-phased-description 不能超过 500 字符');
+  }
+  const hasPhasedOverride = Boolean(
+    opts.huaweiPhasedStart || opts.huaweiPhasedEnd || percent || description,
+  );
+
+  return {
+    huawei: {
+      mode: rawMode as HuaweiReleaseMode,
+      phased: hasPhasedOverride
+        ? {
+            startTime: opts.huaweiPhasedStart,
+            endTime: opts.huaweiPhasedEnd,
+            percent,
+            description,
+          }
+        : undefined,
+    },
+  };
+}
+
 function parseTimeoutMs(opts: any): number {
   if (!['json', 'text'].includes(opts.output)) {
     throw new UsageError('--output 只能是 json 或 text');
@@ -84,6 +129,7 @@ async function androidUpload(opts: any): Promise<void> {
   const appName: string | undefined = opts.appName;
   const summary: string | undefined = opts.summary;
   const description = readText(opts.description);
+  const releaseOptions = parseHuaweiReleaseOptions(opts);
 
   if (!opts.submitReview) {
     console.error(
@@ -126,6 +172,7 @@ async function androidUpload(opts: any): Promise<void> {
         appName,
         summary,
         description,
+        releaseOptions,
         creds: chCreds,
         timeoutMs,
       };
@@ -404,6 +451,15 @@ function build(): Command {
     .option('--app-name <v>', '更新应用名称（注意各渠道限改频率与禁特殊符号）')
     .option('--summary <v>', '更新一句话简介 / 推荐语')
     .option('--description <v>', '更新应用简介 / 长描述，支持 @file')
+    .option(
+      '--huawei-release-mode <v>',
+      '华为发布通道 auto | full | phased；auto 会延续在架分阶段版本',
+      'auto',
+    )
+    .option('--huawei-phased-start <utc>', '华为分阶段开始时间 yyyy-MM-ddTHH:mm:ssZZ')
+    .option('--huawei-phased-end <utc>', '华为分阶段结束时间 yyyy-MM-ddTHH:mm:ssZZ')
+    .option('--huawei-phased-percent <n>', '华为分阶段比例 0-100（自动规范为两位小数）')
+    .option('--huawei-phased-description <v>', '华为分阶段说明，支持 @file；缺省用更新说明')
     .option('--concurrency <n>', '渠道并发数', '3')
     .option('--timeout <s>', '单渠道超时（秒）', '900')
     .option('--output <fmt>', 'json | text', 'text')

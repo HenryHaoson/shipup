@@ -89,7 +89,10 @@ export class HuaweiAdapter implements ChannelAdapter {
         screenshots,
         privacyUrl: ctx.privacyUrl,
         greenVerifyFileUrl: ctx.creds.green_verify_file_url,
+        registeredIdType: ctx.creds.registered_id_type,
+        registeredIdNumber: ctx.creds.registered_id_number,
         callbackAddr: ctx.creds.callback_addr,
+        releaseOptions: ctx.releaseOptions?.huawei,
         timeoutMs: ctx.timeoutMs,
       });
       return {

@@ -8,6 +8,10 @@ android:
       app_id: "100000001"
       client_id: ${HUAWEI_CLIENT_ID}
       client_secret: ${HUAWEI_CLIENT_SECRET}
+      # Optional legacy-app organizer details; configure both fields together.
+      # 1 = company, 2 = individual, 3 = organization.
+      # registered_id_type: "1"
+      # registered_id_number: ${HUAWEI_REGISTERED_ID_NUMBER}
     honor:
       app_id: "100000002"
       client_id: ${HONOR_CLIENT_ID}

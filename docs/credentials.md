@@ -14,7 +14,13 @@ Values can be literal strings, `${ENVIRONMENT_VARIABLE}` references, or
 android:
   package_name: com.example.app
   channels:
-    huawei:  { app_id: "...", client_id: ${HW_ID}, client_secret: ${HW_SECRET} }
+    huawei:
+      app_id: "..."
+      client_id: ${HW_ID}
+      client_secret: ${HW_SECRET}
+      # Optional legacy-app organizer data; both fields are required together.
+      registered_id_type: "1" # 1 company, 2 individual, 3 organization
+      registered_id_number: ${HUAWEI_REGISTERED_ID_NUMBER}
     honor:   { app_id: "...", client_id: ${HONOR_ID}, client_secret: ${HONOR_SECRET} }
     oppo:    { app_id: "...", client_id: ${OPPO_ID}, client_secret: ${OPPO_SECRET} }
     vivo:    { app_id: "...", access_key: ${VIVO_AK}, access_secret: ${VIVO_SK} }
@@ -25,6 +31,11 @@ android:
 ```
 
 Only channels selected by `--upload` or `--channel` are validated.
+
+Huawei's `registered_id_type` and `registered_id_number` are optional and must
+be configured together. They identify the application organizer, not the app's
+filing number. The identifier is sent only in the provider request body and is
+redacted from errors and diagnostics.
 
 ## HarmonyOS and Huawei compatibility commands
 

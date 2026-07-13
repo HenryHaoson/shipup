@@ -53,6 +53,7 @@ shipup harmony upload --package ./application.app --dry-run
 shipup android upload \
   --upload huawei=./app-huawei.apk honor=./app-honor.apk \
   --release-note @./release-note.txt \
+  --huawei-release-mode auto \
   --submit-review --output json
 shipup android status --channel huawei
 
@@ -75,6 +76,13 @@ shipup ios     upload|submit|status|release
 Android upload supports release notes, icons, screenshots, application names,
 summaries, and descriptions where the selected market API supports them. See
 [Provider behavior](docs/providers.md) and [Android market capabilities](docs/android-markets.md).
+
+Huawei uploads default to `--huawei-release-mode auto`. When AppGallery has an
+active, suspended, or compatible draft phased release, `shipup` keeps
+`releaseType=3` consistent across package upload, metadata, and review
+submission. Use `full` to force a full release, or `phased` with
+`--huawei-phased-start`, `--huawei-phased-end`, `--huawei-phased-percent`, and
+an optional `--huawei-phased-description` (the release note is the fallback).
 
 ## Output and exit codes
 

@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.3.0 - 2026-07-13
+
+- Add Huawei full, phased, and automatic release modes, including detection of
+  active or draft phased upgrades and consistent `releaseType` propagation.
+- Refresh inherited draft phased-release schedules immediately before review
+  submission when an upload has made the original schedule stale.
+- Support optional Huawei organizer registration fields for legacy applications
+  and provide actionable submission diagnostics without logging identifiers.
+
 ## 0.2.2 - 2026-07-13
 
 - Fix vivo signature verification for multiline release notes and descriptions by
