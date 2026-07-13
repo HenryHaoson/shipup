@@ -1,0 +1,23 @@
+node_modules/
+coverage/
+*.tgz
+.DS_Store
+
+# Credentials and private keys
+creds.yaml
+creds.*.yaml
+!creds.example.yaml
+*.p8
+*private*.json
+service-account*.json
+.env
+.env.*
+
+# Release artifacts and app-specific metadata
+*.ipa
+*.apk
+*.aab
+*.app
+*.hap
+metadata*.yaml
+note-*.txt

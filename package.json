@@ -1,0 +1,42 @@
+{
+  "name": "shipup",
+  "version": "0.1.0",
+  "description": "Zero-dependency release CLI for App Store Connect and AppGallery Connect",
+  "type": "module",
+  "bin": {
+    "shipup": "./shipup.mjs"
+  },
+  "files": [
+    "shipup.mjs",
+    "lib/",
+    "docs/",
+    "creds.example.yaml",
+    "README.md",
+    "README.zh-CN.md",
+    "CHANGELOG.md",
+    "LICENSE",
+    "SECURITY.md"
+  ],
+  "scripts": {
+    "check": "node --check shipup.mjs && node --check lib/common.mjs && node --check lib/harmony.mjs && node --check lib/huawei.mjs && node --check lib/ios.mjs && node --check scripts/security-scan.mjs",
+    "security": "node scripts/security-scan.mjs",
+    "test": "node --test test/*.test.mjs",
+    "test:coverage": "node --test --experimental-test-coverage test/*.test.mjs",
+    "pack:check": "npm pack --dry-run"
+  },
+  "engines": {
+    "node": ">=18.17"
+  },
+  "keywords": [
+    "app-store-connect",
+    "appgallery-connect",
+    "harmonyos",
+    "ios",
+    "release",
+    "cli"
+  ],
+  "license": "0BSD",
+  "publishConfig": {
+    "access": "public"
+  }
+}

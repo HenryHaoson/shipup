@@ -1,0 +1,130 @@
+import assert from "node:assert/strict";
+import { chmodSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join, resolve } from "node:path";
+import { spawnSync } from "node:child_process";
+import test from "node:test";
+import { storedZip } from "./helpers.mjs";
+
+const cli = resolve(new URL("../shipup.mjs", import.meta.url).pathname);
+
+function run(args, env = {}) {
+  return spawnSync(process.execPath, [cli, ...args], {
+    encoding: "utf8",
+    env: { ...process.env, ...env },
+  });
+}
+
+function tempProject() {
+  const dir = mkdtempSync(join(tmpdir(), "shipup-cli-"));
+  const creds = join(dir, "credentials.yaml");
+  writeFileSync(creds, [
+    "harmony:",
+    "  app_id: '100'",
+    "  package_name: com.example.app",
+    "huawei:",
+    "  app_id: '200'",
+    "  package_name: com.example.app",
+    "ios:",
+    "  app_id: '300'",
+    "  bundle_id: com.example.app",
+    "  issuer_id: issuer",
+    "  key_id: key",
+    "  private_key: fake-private-key",
+  ].join("\n"), { mode: 0o600 });
+  chmodSync(creds, 0o600);
+  return { dir, creds };
+}
+
+test("help and version are available without credentials", () => {
+  const help = run(["--help"]);
+  assert.equal(help.status, 0);
+  assert.match(help.stdout, /shipup harmony upload/);
+  assert.match(help.stdout, /shipup harmony submit/);
+  assert.match(help.stdout, /shipup harmony status/);
+
+  const version = run(["--version"]);
+  assert.equal(version.status, 0);
+  assert.equal(version.stdout.trim(), "0.1.0");
+});
+
+test("invalid usage and missing credentials use stable exit codes", () => {
+  assert.equal(run(["unknown", "status"]).status, 3);
+  const missingHome = mkdtempSync(join(tmpdir(), "shipup-home-"));
+  try {
+    const result = run(["harmony", "status", "--dry-run"], {
+      HOME: missingHome,
+      SHIPUP_CREDS: "",
+    });
+    assert.equal(result.status, 4);
+    assert.match(result.stderr, /未找到凭证/);
+  } finally {
+    rmSync(missingHome, { recursive: true, force: true });
+  }
+});
+
+test("SHIPUP_CREDS supplies the default credential file", () => {
+  const { dir, creds } = tempProject();
+  try {
+    const result = run(["harmony", "status", "--dry-run", "--output", "json"], {
+      SHIPUP_CREDS: creds,
+    });
+    assert.equal(result.status, 0);
+    const json = JSON.parse(result.stdout);
+    assert.equal(json.ok, true);
+    assert.equal(json.results[0].status, "skipped");
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("Huawei dry-run validates package shape without network access", () => {
+  const { dir, creds } = tempProject();
+  try {
+    const apk = join(dir, "sample.apk");
+    writeFileSync(apk, "not-a-real-apk");
+    const result = run([
+      "huawei", "upload", "--creds", creds, "--package", apk,
+      "--dry-run", "--output", "json",
+    ]);
+    assert.equal(result.status, 0);
+    assert.equal(JSON.parse(result.stdout).results[0].status, "skipped");
+
+    const wrong = join(dir, "sample.zip");
+    writeFileSync(wrong, "wrong-extension");
+    assert.equal(run(["huawei", "upload", "--creds", creds, "--package", wrong, "--dry-run"]).status, 5);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("Harmony dry-run rejects a package for another application", () => {
+  const { dir, creds } = tempProject();
+  try {
+    const app = join(dir, "sample.app");
+    writeFileSync(app, storedZip("pack.info", JSON.stringify({
+      summary: { app: { bundleName: "com.other.app", version: { name: "1.0.0", code: 1 } } },
+    })));
+    const result = run(["harmony", "upload", "--creds", creds, "--package", app, "--dry-run"]);
+    assert.equal(result.status, 5);
+    assert.match(result.stderr, /包名不匹配/);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("iOS dry-run does not invoke Xcode upload tools", () => {
+  const { dir, creds } = tempProject();
+  try {
+    const ipa = join(dir, "sample.ipa");
+    writeFileSync(ipa, "not-a-real-ipa");
+    const result = run([
+      "ios", "upload", "--creds", creds, "--package", ipa,
+      "--dry-run", "--output", "json",
+    ], { PATH: "" });
+    assert.equal(result.status, 0);
+    assert.equal(JSON.parse(result.stdout).results[0].status, "skipped");
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});

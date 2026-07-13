@@ -1,0 +1,26 @@
+# Copy this file to ~/.config/shipup/credentials.yaml and chmod 600 it.
+# Values support literals, ${ENVIRONMENT_VARIABLE}, and @relative/file.
+
+harmony:
+  app_id: "1234567890"
+  package_name: com.example.app
+  default_lang: zh-CN
+  service_account: @./agc-service-account.json
+  # API client credentials are also supported:
+  # client_id: ${AGC_CLIENT_ID}
+  # client_secret: ${AGC_CLIENT_SECRET}
+  # Required for developer accounts registered outside mainland China:
+  # chinese_mainland_flag: 1
+
+huawei:
+  app_id: "123456789"
+  package_name: com.example.app
+  default_lang: zh-CN
+  service_account: @./agc-service-account.json
+
+ios:
+  app_id: "1234567890"
+  bundle_id: com.example.app
+  issuer_id: ${ASC_ISSUER_ID}
+  key_id: ${ASC_KEY_ID}
+  private_key: @./AuthKey_XXXXXXXXXX.p8
