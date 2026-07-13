@@ -1,26 +1,62 @@
-# Copy this file to ~/.config/shipup/credentials.yaml and chmod 600 it.
+# Copy to ~/.config/shipup/credentials.yaml and chmod 600 it.
 # Values support literals, ${ENVIRONMENT_VARIABLE}, and @relative/file.
+
+android:
+  package_name: com.example.app
+  channels:
+    huawei:
+      app_id: "100000001"
+      client_id: ${HUAWEI_CLIENT_ID}
+      client_secret: ${HUAWEI_CLIENT_SECRET}
+    honor:
+      app_id: "100000002"
+      client_id: ${HONOR_CLIENT_ID}
+      client_secret: ${HONOR_CLIENT_SECRET}
+    oppo:
+      app_id: "100003"
+      client_id: ${OPPO_CLIENT_ID}
+      client_secret: ${OPPO_CLIENT_SECRET}
+    vivo:
+      app_id: "10004"
+      access_key: ${VIVO_ACCESS_KEY}
+      access_secret: ${VIVO_ACCESS_SECRET}
+    xiaomi:
+      user_name: ${XIAOMI_USER_NAME}
+      password: ${XIAOMI_PASSWORD}
+      rsa_modulus: ${XIAOMI_RSA_MODULUS}
+    samsung:
+      app_id: "000001000000"
+      service_account: ${SAMSUNG_SERVICE_ACCOUNT}
+      private_key: "@./samsung-private-key.pem"
+    qq:
+      app_id: "1100000000"
+      user_id: "60000"
+      access_secret: ${QQ_ACCESS_SECRET}
+    meizu:
+      access_key: ${MEIZU_ACCESS_KEY}
+      access_secret: ${MEIZU_ACCESS_SECRET}
 
 harmony:
   app_id: "1234567890"
   package_name: com.example.app
   default_lang: zh-CN
-  service_account: @./agc-service-account.json
+  service_account: "@./agc-service-account.json"
   # API client credentials are also supported:
   # client_id: ${AGC_CLIENT_ID}
   # client_secret: ${AGC_CLIENT_SECRET}
-  # Required for developer accounts registered outside mainland China:
-  # chinese_mainland_flag: 1
 
+# Compatibility command: shipup huawei upload|status.
+# Android multi-market commands use android.channels.huawei above.
 huawei:
   app_id: "123456789"
   package_name: com.example.app
   default_lang: zh-CN
-  service_account: @./agc-service-account.json
+  service_account: "@./agc-service-account.json"
 
 ios:
   app_id: "1234567890"
   bundle_id: com.example.app
   issuer_id: ${ASC_ISSUER_ID}
   key_id: ${ASC_KEY_ID}
-  private_key: @./AuthKey_XXXXXXXXXX.p8
+  private_key: "@./AuthKey_XXXXXXXXXX.p8"
+  team_id: ${APPLE_TEAM_ID}
