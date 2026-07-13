@@ -25,13 +25,13 @@ performs local validation without network requests.
 
 ## Install
 
-Until the first npm registry release, install from a checkout or a pinned GitHub tag:
-
 ```bash
-npm install
-npm link
+npm install --global shipup
 shipup --help
 ```
+
+Published releases are delivered from GitHub Actions to npm through OIDC trusted
+publishing; the workflow does not store a long-lived npm token.
 
 ## Quick start
 

@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.2.1 - 2026-07-13
+
+- Publish `shipup` to npm and document global installation.
+- Publish future GitHub Releases through OIDC trusted publishing with automatic
+  provenance and strict release-tag validation.
+
 ## 0.2.0 - 2026-07-13
 
 - Add Android multi-market upload and status commands for Huawei, Honor, OPPO,
