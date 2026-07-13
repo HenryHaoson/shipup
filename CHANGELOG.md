@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.2.0 - 2026-07-13
+
+- Add Android multi-market upload and status commands for Huawei, Honor, OPPO,
+  vivo, Xiaomi, Samsung, Tencent MyApp, and Meizu.
+- Add APK metadata and ABI inspection, launcher-icon extraction, image resizing,
+  screenshot processing, and optional store-listing metadata updates.
+- Expand App Store Connect commands with bundle-ID lookup, standalone build
+  submission, localization metadata, and idempotent phased release.
+- Support combined `android`, `harmony`, `huawei`, and `ios` credential sections
+  in the default credentials file.
+- Add credential permission warnings and redaction for multi-market provider
+  errors and signed responses.
+- Preserve the original HarmonyOS and Huawei compatibility commands.
+
 ## 0.1.0 - 2026-07-13
 
 - Add HarmonyOS AppGallery upload, submit, and status commands.

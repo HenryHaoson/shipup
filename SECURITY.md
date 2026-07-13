@@ -18,8 +18,8 @@ those credentials.
 
 Do not upload raw debug logs without reviewing them. `shipup` redacts common
 authorization tokens, private-key blocks, secret-like JSON fields, URL query
-strings, and long opaque values, but provider responses can change without
-notice.
+parameters, and long opaque values across both core and multi-market adapters,
+but provider responses can change without notice.
 
 ## Reporting a vulnerability
 

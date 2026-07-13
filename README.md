@@ -2,29 +2,30 @@
 
 [![CI](https://github.com/HenryHaoson/shipup/actions/workflows/ci.yml/badge.svg)](https://github.com/HenryHaoson/shipup/actions/workflows/ci.yml)
 
-`shipup` is a zero-dependency Node.js CLI for uploading, submitting, inspecting,
-and releasing mobile applications through:
+`shipup` is a Node.js CLI for uploading, submitting, inspecting, and releasing
+mobile applications across major app stores:
 
-- AppGallery Connect Publishing API v3 for HarmonyOS `.app` packages;
-- AppGallery Connect Publish API v2 for Android APKs;
-- App Store Connect API for iOS submissions and phased releases.
+- HarmonyOS AppGallery Connect (`.app`);
+- Android: Huawei, Honor, OPPO, vivo, Xiaomi, Samsung, Tencent MyApp, and Meizu (`.apk`);
+- Apple App Store Connect (`.ipa`).
 
-It is designed for CI pipelines: JSON results go to stdout, progress goes to
-stderr, state names and exit codes are consistent across providers, and
-`--dry-run` validates local inputs without making network requests.
+It is designed for local automation and CI: JSON goes to stdout, diagnostics go
+to stderr, provider states and exit codes are normalized, and `--dry-run`
+performs local validation without network requests.
 
-> `shipup` is an independent community project and is not affiliated with,
-> endorsed by, or supported by Apple or Huawei.
+> `shipup` is an independent community project and is not affiliated with or
+> endorsed by any supported store operator.
 
 ## Requirements
 
 - Node.js 18.17 or newer.
-- The iOS upload command requires macOS, Xcode, and `xcrun altool`.
-- Provider credentials with permission to upload or submit the target app.
+- iOS upload requires macOS, Xcode, and `xcrun altool`.
+- Android icon extraction requires Android SDK `aapt`/`aapt2`; alternatively pass `--icon`.
+- Provider credentials authorized for the target application.
 
 ## Install
 
-Until the first registry release, install from a checked-out repository:
+Until the first npm registry release, install from a checkout or a pinned GitHub tag:
 
 ```bash
 npm install
@@ -32,12 +33,7 @@ npm link
 shipup --help
 ```
 
-For release automation, pin an exact package version in the consuming project.
-Do not run an unpinned latest version during a production release.
-
 ## Quick start
-
-Create a credentials file outside the source tree:
 
 ```bash
 mkdir -p ~/.config/shipup
@@ -45,76 +41,70 @@ cp creds.example.yaml ~/.config/shipup/credentials.yaml
 chmod 600 ~/.config/shipup/credentials.yaml
 ```
 
-Then use `--creds`, `SHIPUP_CREDS`, or the default credentials path:
+Credentials are resolved from `--creds`, then `SHIPUP_CREDS`, then
+`~/.config/shipup/credentials.yaml`.
 
 ```bash
-shipup harmony status --creds ~/.config/shipup/credentials.yaml
-shipup huawei upload --package ./app-release.apk --submit-review
-shipup ios status --version 1.0.0
-```
+# HarmonyOS
+shipup harmony status
+shipup harmony upload --package ./application.app --dry-run
 
-See [Credentials](docs/credentials.md) and [Providers](docs/providers.md) for
-configuration and platform-specific behavior.
+# Android multi-market upload
+shipup android upload \
+  --upload huawei=./app-huawei.apk honor=./app-honor.apk \
+  --release-note @./release-note.txt \
+  --submit-review --output json
+shipup android status --channel huawei
+
+# App Store Connect
+shipup ios upload --package ./application.ipa --dry-run
+shipup ios submit --app-version 2.0.0 --build-version 200 --bundle-id com.example.app
+shipup ios status --app-version 2.0.0 --bundle-id com.example.app
+shipup ios release --app-version 2.0.0 --bundle-id com.example.app --phased
+```
 
 ## Commands
 
 ```text
 shipup harmony upload|submit|status
-shipup huawei  upload|status
+shipup huawei  upload|status                    # compatibility command
+shipup android upload|status                    # eight Android markets
 shipup ios     upload|submit|status|release
 ```
 
-All commands support:
-
-- `--creds <path>` to select a credential file;
-- `--output json|text`;
-- `--timeout <seconds>`;
-- `--dry-run`.
+Android upload supports release notes, icons, screenshots, application names,
+summaries, and descriptions where the selected market API supports them. See
+[Provider behavior](docs/providers.md) and [Android market capabilities](docs/android-markets.md).
 
 ## Output and exit codes
 
-JSON output follows this shape:
-
-```json
-{
-  "tool": "shipup",
-  "platform": "harmony",
-  "command": "status",
-  "ok": true,
-  "summary": { "total": 1, "succeeded": 1, "failed": 0, "skipped": 0 },
-  "results": [{ "channel": "appgallery", "status": "published" }]
-}
-```
-
-Exit codes:
+`--output json` returns a stable object with `tool`, `platform`, `command`,
+`ok`, `summary`, and per-channel `results`. Normalized states include
+`uploaded`, `submitted`, `pending_review`, `approved`, `published`, `rejected`,
+`offline`, `skipped`, and `failed`.
 
 | Code | Meaning |
 |---:|---|
 | `0` | success |
+| `1` | partial multi-channel failure |
 | `2` | provider or processing failure |
 | `3` | invalid CLI usage |
 | `4` | missing or invalid credentials |
-| `5` | missing or mismatched package input |
-| `124` | overall timeout |
+| `5` | missing or invalid package input |
+| `124` | timeout |
 
-Normalized states are `uploaded`, `submitted`, `pending_review`, `approved`,
-`published`, `rejected`, `offline`, `draft`, `skipped`, and `failed`.
-
-## Safety boundary
-
-The CLI intentionally does not create apps, alter compliance questionnaires,
-replace store artwork, withdraw submissions, or remove published apps. Those
-low-frequency or destructive actions remain in the provider console.
-
-Read [SECURITY.md](SECURITY.md) before using production credentials.
+Read [Credentials](docs/credentials.md) and [Security](SECURITY.md) before using
+production accounts.
 
 ## Development
 
 ```bash
 npm run check
+npm run security
 npm test
 npm run test:coverage
 npm run pack:check
+npm audit
 ```
 
 ## License
