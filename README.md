@@ -1,39 +1,38 @@
 # shipup
 
+简体中文 | [English](README.en.md)
+
 [![CI](https://github.com/HenryHaoson/shipup/actions/workflows/ci.yml/badge.svg)](https://github.com/HenryHaoson/shipup/actions/workflows/ci.yml)
 
-`shipup` is a Node.js CLI for uploading, submitting, inspecting, and releasing
-mobile applications across major app stores:
+`shipup` 是一个跨平台应用商店发布 CLI，支持：
 
-- HarmonyOS AppGallery Connect (`.app`);
-- Android: Huawei, Honor, OPPO, vivo, Xiaomi, Samsung, Tencent MyApp, and Meizu (`.apk`);
-- Apple App Store Connect (`.ipa`).
+- HarmonyOS `.app`：AppGallery Connect；
+- Android APK：华为、荣耀、OPPO、vivo、小米、三星、应用宝、魅族；
+- iOS `.ipa`：App Store Connect 上传、提审、状态查询和灰度发布。
 
-It is designed for local automation and CI: JSON goes to stdout, diagnostics go
-to stderr, provider states and exit codes are normalized, and `--dry-run`
-performs local validation without network requests.
+它适合本地自动化和 CI：JSON 只写 stdout，过程信息写 stderr，状态和退出码统一，
+`--dry-run` 只做本地校验，不发网络请求。
 
-> `shipup` is an independent community project and is not affiliated with or
-> endorsed by any supported store operator.
+> `shipup` 是独立社区项目，与各应用市场运营方不存在隶属或官方背书关系。
 
-## Requirements
+## 环境
 
-- Node.js 18.17 or newer.
-- iOS upload requires macOS, Xcode, and `xcrun altool`.
-- Android icon extraction requires Android SDK `aapt`/`aapt2`; alternatively pass `--icon`.
-- Provider credentials authorized for the target application.
+- Node.js 18.17 或更新版本；
+- iOS 上传需要 macOS、Xcode 和 `xcrun altool`；
+- Android 自动提取图标需要 Android SDK 的 `aapt`/`aapt2`，也可显式传 `--icon`；
+- 对目标应用具备相应权限的平台凭证。
 
-## Install
+## 安装
 
 ```bash
 npm install --global shipup
 shipup --help
 ```
 
-Published releases are delivered from GitHub Actions to npm through OIDC trusted
-publishing; the workflow does not store a long-lived npm token.
+正式版本由 GitHub Actions 通过 OIDC Trusted Publishing 发布到 npm，工作流中不保存
+长期 npm token。
 
-## Quick start
+## 凭证
 
 ```bash
 mkdir -p ~/.config/shipup
@@ -41,15 +40,18 @@ cp creds.example.yaml ~/.config/shipup/credentials.yaml
 chmod 600 ~/.config/shipup/credentials.yaml
 ```
 
-Credentials are resolved from `--creds`, then `SHIPUP_CREDS`, then
-`~/.config/shipup/credentials.yaml`.
+查找顺序为 `--creds`、`SHIPUP_CREDS`、`~/.config/shipup/credentials.yaml`。
+值支持字面量、`${ENVIRONMENT_VARIABLE}` 和 `@相对文件`。完整结构见
+[凭证说明](docs/credentials.md)。
+
+## 使用
 
 ```bash
 # HarmonyOS
 shipup harmony status
 shipup harmony upload --package ./application.app --dry-run
 
-# Android multi-market upload
+# Android 多渠道
 shipup android upload \
   --upload huawei=./app-huawei.apk honor=./app-honor.apk \
   --release-note @./release-note.txt \
@@ -57,54 +59,50 @@ shipup android upload \
   --submit-review --output json
 shipup android status --channel huawei
 
-# App Store Connect
+# iOS
 shipup ios upload --package ./application.ipa --dry-run
 shipup ios submit --app-version 2.0.0 --build-version 200 --bundle-id com.example.app
 shipup ios status --app-version 2.0.0 --bundle-id com.example.app
 shipup ios release --app-version 2.0.0 --bundle-id com.example.app --phased
 ```
 
-## Commands
+命令总览：
 
 ```text
 shipup harmony upload|submit|status
-shipup huawei  upload|status                    # compatibility command
-shipup android upload|status                    # eight Android markets
+shipup huawei  upload|status                    # 原华为兼容命令
+shipup android upload|status                    # Android 八渠道
 shipup ios     upload|submit|status|release
 ```
 
-Android upload supports release notes, icons, screenshots, application names,
-summaries, and descriptions where the selected market API supports them. See
-[Provider behavior](docs/providers.md) and [Android market capabilities](docs/android-markets.md).
+Android 上传支持按渠道更新发布说明、图标、截图、应用名、一句话简介和长描述。
+各市场具体支持情况见 [平台行为](docs/providers.md) 和
+[Android 市场能力表](docs/android-markets.md)。
 
-Huawei uploads default to `--huawei-release-mode auto`. When AppGallery has an
-active, suspended, or compatible draft phased release, `shipup` keeps
-`releaseType=3` consistent across package upload, metadata, and review
-submission. Use `full` to force a full release, or `phased` with
-`--huawei-phased-start`, `--huawei-phased-end`, `--huawei-phased-percent`, and
-an optional `--huawei-phased-description` (the release note is the fallback).
+华为上传默认使用 `--huawei-release-mode auto`。检测到正在发布、已暂停或可继续的
+草稿分阶段版本时，`shipup` 会让软件包上传、素材更新和提审统一使用
+`releaseType=3`。可用 `full` 强制全网发布；首次显式使用 `phased` 时需提供
+`--huawei-phased-start`、`--huawei-phased-end`、`--huawei-phased-percent`，
+分阶段说明可用 `--huawei-phased-description`，缺省回退到更新说明。
 
-## Output and exit codes
+iOS 新参数统一为 `--app-version` 和 `--build-version`；旧的 `--version`、`--build`
+仍可使用。`--bundle-id` 可以自动反查 App Store Connect 数字 App ID。
 
-`--output json` returns a stable object with `tool`, `platform`, `command`,
-`ok`, `summary`, and per-channel `results`. Normalized states include
-`uploaded`, `submitted`, `pending_review`, `approved`, `published`, `rejected`,
-`offline`, `skipped`, and `failed`.
+## 退出码
 
-| Code | Meaning |
+| 退出码 | 含义 |
 |---:|---|
-| `0` | success |
-| `1` | partial multi-channel failure |
-| `2` | provider or processing failure |
-| `3` | invalid CLI usage |
-| `4` | missing or invalid credentials |
-| `5` | missing or invalid package input |
-| `124` | timeout |
+| `0` | 成功 |
+| `1` | 多渠道部分失败 |
+| `2` | 全部失败或平台处理失败 |
+| `3` | 参数错误 |
+| `4` | 凭证缺失或无效 |
+| `5` | 软件包缺失或无效 |
+| `124` | 超时 |
 
-Read [Credentials](docs/credentials.md) and [Security](SECURITY.md) before using
-production accounts.
+生产使用前请阅读 [SECURITY.md](SECURITY.md)。
 
-## Development
+## 开发
 
 ```bash
 npm run check
@@ -115,6 +113,4 @@ npm run pack:check
 npm audit
 ```
 
-## License
-
-[Zero-Clause BSD](LICENSE).
+许可证：[Zero-Clause BSD](LICENSE)。
