@@ -29,8 +29,6 @@ npm install --global shipup
 shipup --help
 ```
 
-正式版本由 GitHub Actions 通过 OIDC Trusted Publishing 发布到 npm，工作流中不保存
-长期 npm token。
 
 ## 凭证
 
